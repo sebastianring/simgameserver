@@ -22,18 +22,18 @@ type Rule struct {
 
 func main() {
 	initServer()
-	runServer()
+	// runServer()
 
-	// testSC := simulationgame.SimulationConfig{
-	// 	Rows:      40,
-	// 	Cols:      100,
-	// 	Foods:     10,
-	// 	Draw:      true,
-	// 	Creature1: 20,
-	// 	Creature2: 10,
-	// }
+	testSC := simulationgame.SimulationConfig{
+		Rows:      40,
+		Cols:      100,
+		Foods:     75,
+		Draw:      true,
+		Creature1: 20,
+		Creature2: 10,
+	}
 
-	// simulationgame.RunSimulation(&testSC)
+	simulationgame.RunSimulation(&testSC)
 }
 
 func initServer() {
