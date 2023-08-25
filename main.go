@@ -90,39 +90,43 @@ func initServer() {
 }
 
 func runServer() {
-	http.HandleFunc("/api/new_sim", func(w http.ResponseWriter, r *http.Request) {
-		sc, err := getSimulationConfig(r)
+	http.HandleFunc("/api/new_sim", newSimulation)
 
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			fmt.Println(err.Error())
-		}
-
-		fmt.Println("Starting simulation with config: ")
-		fmt.Println("sc.creature1: " + strconv.Itoa(int(sc.Creature1)))
-
-		resultBoard, err := simulationgame.RunSimulation(sc)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			panic(err.Error())
-		}
-
-		jsonBytes, err := json.MarshalIndent(resultBoard, "", " ")
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			panic(err.Error())
-		}
-
-		// fmt.Println("Respond with json data: \n" + string(jsonBytes))
-
-		w.Header().Set("Content-type", "application/json")
-		w.Write(jsonBytes)
-	})
+	http.HandleFunc("/api/sim", getBoardFromDb)
 
 	fmt.Println("Server running at port 8080")
 	http.ListenAndServe(":8080", nil)
+}
+
+func newSimulation(w http.ResponseWriter, r *http.Request) {
+	sc, err := getSimulationConfig(r)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		fmt.Println(err.Error())
+	}
+
+	fmt.Println("Starting simulation with config: ")
+	fmt.Println("sc.creature1: " + strconv.Itoa(int(sc.Creature1)))
+
+	resultBoard, err := simulationgame.RunSimulation(sc)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err.Error())
+	}
+
+	jsonBytes, err := json.MarshalIndent(resultBoard, "", " ")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err.Error())
+	}
+
+	// fmt.Println("Respond with json data: \n" + string(jsonBytes))
+
+	w.Header().Set("Content-type", "application/json")
+	w.Write(jsonBytes)
 }
 
 func getSimulationConfig(r *http.Request) (*simulationgame.SimulationConfig, error) {
@@ -209,4 +213,24 @@ func getSimulationConfig(r *http.Request) (*simulationgame.SimulationConfig, err
 	}
 
 	return &sc, nil
+}
+
+func getBoardFromDb(w http.ResponseWriter, r *http.Request) {
+
+	db, err := openDbConnection()
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err.Error())
+	}
+
+	go func() {
+		query := "select * from simulation_game.boards RETURNiNG id"
+		err := db.QueryRow(query, msg.Id, msg.Prio, msg.Texts, b.Id).Scan(&msg.Id)
+
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+	}()
 }
