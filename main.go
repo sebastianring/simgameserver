@@ -258,6 +258,7 @@ func getBoardFromDb(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
+	fmt.Println("Responded with json file: " + string(jsonResponse))
 }
 
 func testSimulation() {
