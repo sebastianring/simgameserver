@@ -32,16 +32,16 @@ func openDbConnection() (*sql.DB, error) {
 		fmt.Println("Database connection secured!")
 	}
 
-	err = db.Ping()
-
-	if err != nil {
-		fmt.Println(err.Error())
-
-		return nil, err
-
-	} else {
-		fmt.Println("Database connection secured!")
-	}
+	// err = db.Ping()
+	//
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	//
+	// 	return nil, err
+	//
+	// } else {
+	// 	fmt.Println("Database pinged!")
+	// }
 
 	return db, nil
 }

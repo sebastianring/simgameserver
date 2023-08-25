@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/sebastianring/simulationgame"
 	"net/http"
 	"strconv"
-
-	"github.com/sebastianring/simulationgame"
 )
 
 var parameterRules map[string]*Rule
@@ -20,20 +20,54 @@ type Rule struct {
 	FinalValue    any
 }
 
+type DBboard struct {
+	Id   uuid.UUID `json:"id"`
+	Rows int       `json:"rows"`
+	Cols int       `json:"cols"`
+}
+
 func main() {
 	initServer()
-	// runServer()
+	runServer()
+}
 
-	testSC := simulationgame.SimulationConfig{
-		Rows:      40,
-		Cols:      100,
-		Foods:     75,
-		Draw:      true,
-		Creature1: 20,
-		Creature2: 10,
+func runServer() {
+	http.HandleFunc("/api/new_sim", newSimulation)
+	http.HandleFunc("/api/sim", getBoardFromDb)
+
+	fmt.Println("Server running at port 8080")
+	http.ListenAndServe(":8080", nil)
+}
+
+func newSimulation(w http.ResponseWriter, r *http.Request) {
+	sc, err := getSimulationConfig(r)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		fmt.Println(err.Error())
 	}
 
-	simulationgame.RunSimulation(&testSC)
+	fmt.Println("Starting simulation with config: ")
+	fmt.Println("sc.creature1: " + strconv.Itoa(int(sc.Creature1)))
+
+	resultBoard, err := simulationgame.RunSimulation(sc)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err.Error())
+	}
+
+	jsonBytes, err := json.MarshalIndent(resultBoard, "", " ")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err.Error())
+	}
+
+	// fmt.Println("Respond with json data: \n" + string(jsonBytes))
+
+	w.Header().Set("Content-type", "application/json")
+	w.Write(jsonBytes)
 }
 
 func initServer() {
@@ -87,46 +121,6 @@ func initServer() {
 	parameterRules["creature2"] = &creature2Rule
 
 	fmt.Println("Server initialized.")
-}
-
-func runServer() {
-	http.HandleFunc("/api/new_sim", newSimulation)
-
-	http.HandleFunc("/api/sim", getBoardFromDb)
-
-	fmt.Println("Server running at port 8080")
-	http.ListenAndServe(":8080", nil)
-}
-
-func newSimulation(w http.ResponseWriter, r *http.Request) {
-	sc, err := getSimulationConfig(r)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		fmt.Println(err.Error())
-	}
-
-	fmt.Println("Starting simulation with config: ")
-	fmt.Println("sc.creature1: " + strconv.Itoa(int(sc.Creature1)))
-
-	resultBoard, err := simulationgame.RunSimulation(sc)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		panic(err.Error())
-	}
-
-	jsonBytes, err := json.MarshalIndent(resultBoard, "", " ")
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		panic(err.Error())
-	}
-
-	// fmt.Println("Respond with json data: \n" + string(jsonBytes))
-
-	w.Header().Set("Content-type", "application/json")
-	w.Write(jsonBytes)
 }
 
 func getSimulationConfig(r *http.Request) (*simulationgame.SimulationConfig, error) {
@@ -216,21 +210,65 @@ func getSimulationConfig(r *http.Request) (*simulationgame.SimulationConfig, err
 }
 
 func getBoardFromDb(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+
+	if id == "" {
+		http.Error(w, "No id given, please check parameter id, currently given id: "+id, http.StatusInternalServerError)
+		return
+	} else {
+		fmt.Println("This is the ID given, looking for this in the db: " + id)
+	}
 
 	db, err := openDbConnection()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		panic(err.Error())
+		return
 	}
 
-	go func() {
-		query := "select * from simulation_game.boards RETURNiNG id"
-		err := db.QueryRow(query, msg.Id, msg.Prio, msg.Texts, b.Id).Scan(&msg.Id)
+	defer db.Close()
 
-		if err != nil {
-			fmt.Println(err.Error())
+	query := "SELECT * FROM simulation_game.boards WHERE id = $1"
+	rows, err := db.Query(query, id)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	var results []DBboard
+
+	for rows.Next() {
+		dbboard := DBboard{}
+
+		if err := rows.Scan(&dbboard.Id, &dbboard.Rows, &dbboard.Cols); err != nil {
+			http.Error(w, "Database scan error", http.StatusInternalServerError)
+			return
 		}
 
-	}()
+		results = append(results, dbboard)
+	}
+
+	jsonResponse, err := json.Marshal(results)
+
+	if err != nil {
+		http.Error(w, "Error marshaling json", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
+}
+
+func testSimulation() {
+	testSC := simulationgame.SimulationConfig{
+		Rows:      40,
+		Cols:      100,
+		Foods:     75,
+		Draw:      true,
+		Creature1: 20,
+		Creature2: 10,
+	}
+
+	simulationgame.RunSimulation(&testSC)
 }
