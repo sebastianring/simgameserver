@@ -133,16 +133,20 @@ func getSimulationConfig(r *http.Request) (*simulationgame.SimulationConfig, err
 
 		if len(parameter) == 0 {
 			rule.FinalValue = rule.StandardValue
+
 		} else {
 			_, ok := rule.StandardValue.(bool)
 
 			if ok {
 				if parameter == "true" {
 					rule.FinalValue = true
+
 				} else if parameter == "false" {
 					rule.FinalValue = false
+
 				} else {
 					return nil, errors.New(rule.ErrorMsg)
+
 				}
 			} else {
 				_, ifInt := rule.StandardValue.(int)
@@ -161,7 +165,9 @@ func getSimulationConfig(r *http.Request) (*simulationgame.SimulationConfig, err
 
 					if ifUint {
 						rule.FinalValue = uint(value)
+
 					} else {
+
 						rule.FinalValue = value
 					}
 
@@ -215,6 +221,7 @@ func getBoardFromDb(w http.ResponseWriter, r *http.Request) {
 	if id == "" {
 		http.Error(w, "No id given, please check parameter id, currently given id: "+id, http.StatusInternalServerError)
 		return
+
 	} else {
 		fmt.Println("This is the ID given, looking for this in the db: " + id)
 	}
