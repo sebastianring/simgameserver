@@ -3,12 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/sebastianring/simulationgame"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/sebastianring/simulationgame"
 )
 
 var parameterRules map[string]*Rule
@@ -21,19 +23,16 @@ type Rule struct {
 }
 
 type valueInterval interface {
-	// getParameter() string
 	getMin() int
 	getMax() int
 }
 
 type intInterval struct {
-	// parameter string
 	min int
 	max int
 }
 
 type uintInterval struct {
-	// parameter string
 	min uint
 	max uint
 }
@@ -46,10 +45,6 @@ func (ii *intInterval) getMax() int {
 	return ii.max
 }
 
-// func (ii *intInterval) getParameter() string {
-// 	return ii.parameter
-// }
-
 func (ui *uintInterval) getMin() int {
 	return int(ui.min)
 }
@@ -57,10 +52,6 @@ func (ui *uintInterval) getMin() int {
 func (ui *uintInterval) getMax() int {
 	return int(ui.max)
 }
-
-// func (ui *uintInterval) getParameter() string {
-// 	return ui.parameter
-// }
 
 func initRules() {
 	rowsRule := Rule{
@@ -117,15 +108,28 @@ func initRules() {
 func getSimulationConfigFromUrl(r *http.Request) (*simulationgame.SimulationConfig, error) {
 	sc := simulationgame.SimulationConfig{}
 	finalValue := make(map[string]any)
+	vars := r.URL.Query()
+	// valueMap := map[string]any{
+	// 	"rows":      vars["rows"][0],
+	// 	"cols":      vars["cols"][0],
+	// 	"draw":      vars["draw"][0],
+	// 	"foods":     vars["foods"][0],
+	// 	"creature1": vars["creature1"][0],
+	// 	"creature2": vars["creature2"][0],
+	// }
+
+	fmt.Println(vars)
+	for k, v := range vars {
+		fmt.Println(k, v[0])
+	}
 
 	for key, rule := range parameterRules {
 		parameter := r.URL.Query().Get(key)
 
-		fmt.Println("Parameter fetched: " + key + " " + parameter + "its length: " + strconv.Itoa(len(parameter)))
+		fmt.Println("Parameter fetched: " + key + " " + parameter + " and its length: " + strconv.Itoa(len(parameter)))
 
 		if len(parameter) == 0 {
 			finalValue[parameter] = rule.StandardValue
-
 		} else {
 			_, ok := rule.StandardValue.(bool)
 
@@ -263,7 +267,7 @@ func randomValueInInterval(interval valueInterval) int {
 	return value
 }
 
-func (r *Rule) validateValue(value any) (any, bool) {
+func (r *Rule) validateGenericValue(value any) (any, bool) {
 	if value == nil {
 		return nil, false
 	}
@@ -313,16 +317,120 @@ func (r *Rule) validateValue(value any) (any, bool) {
 	return nil, false
 }
 
+func (r *Rule) validateValue(value any) (any, bool) {
+	if value == nil {
+		return nil, false
+	}
+
+	// fmt.Println(reflect.TypeOf(r.StandardValue), reflect.TypeOf(value))
+
+	if reflect.TypeOf(value) == reflect.TypeOf(r.StandardValue) {
+		switch v := value.(type) {
+		case bool:
+			return value, true
+		case int:
+			min, ok := r.MinVal.(int)
+
+			if !ok {
+				return nil, false
+			}
+
+			max, ok := r.MaxVal.(int)
+
+			if !ok {
+				return nil, false
+			}
+
+			if v >= min && v <= max {
+				return value, true
+			}
+		case uint:
+			min, ok := r.MinVal.(uint)
+
+			if !ok {
+				return nil, false
+			}
+
+			max, ok := r.MaxVal.(uint)
+
+			if !ok {
+				return nil, false
+			}
+
+			if v >= min && v <= max {
+				return value, true
+			}
+
+		default:
+			return nil, false
+		}
+	}
+
+	return nil, false
+}
+
+func cleanUrlParametersToMap(input url.Values) (map[string]any, error) {
+	returnMap := make(map[string]any)
+
+	for key, value := range input {
+		switch key {
+		case "draw":
+			if value[0] == "true" {
+				returnMap[key] = true
+			} else if value[0] == "false" {
+				returnMap[key] = false
+			}
+
+		case "rows", "cols", "foods":
+			// v, ok := value[0].(string)
+			//
+			// if !ok {
+			// 	fmt.Println("Type assertion failed - not a string")
+			// 	return nil, errors.New("Type assertion failed - not a string")
+			// }
+			//
+			intV, err := strconv.Atoi(value[0])
+
+			if err != nil {
+				fmt.Println("Issue with converting url parameter - not a string")
+				return nil, errors.New("Issue with converting url parameter - not a string")
+			}
+
+			returnMap[key] = intV
+		case "creature1", "creature2":
+			// v, ok := input[key].(string)
+			//
+			// if !ok {
+			// 	fmt.Println("Type assertion failed - not a string")
+			// 	return nil, errors.New("Type assertion failed - not a string")
+			// }
+
+			intV, err := strconv.Atoi(value[0])
+
+			if err != nil {
+				fmt.Println("Issue with converting url parameter - not a string")
+				return nil, errors.New("Issue with converting url parameter - not a string")
+			}
+
+			returnMap[key] = uint(intV)
+		}
+	}
+
+	return returnMap, nil
+}
+
 func getValidatedConfigFromMap(valueMap map[string]any) (*simulationgame.SimulationConfig, error) {
-	sc := simulationgame.SimulationConfig{Draw: false}
+	sc := simulationgame.SimulationConfig{}
 	finalValue := make(map[string]any)
 
 	for key, rule := range parameterRules {
 		v, ok := rule.validateValue(valueMap[key])
 
 		if !ok {
+			// Currently, if there is an issue with a validation,
+			// standard value is set instead.
+			// Maybe should return an error instead.
 			finalValue[key] = rule.StandardValue
-			// return nil, errors.New("Error validating value.")
 		} else {
 			finalValue[key] = v
 		}
@@ -340,11 +448,11 @@ func getValidatedConfigFromMap(valueMap map[string]any) (*simulationgame.Simulat
 		sc.Rows = rows
 	}
 
-	// draw, ok := finalValue["draw"].(bool)
-	//
-	// if ok {
-	// 	sc.Draw = draw
-	// }
+	draw, ok := finalValue["draw"].(bool)
+
+	if ok {
+		sc.Draw = draw
+	}
 
 	foods, ok := finalValue["foods"].(int)
 
