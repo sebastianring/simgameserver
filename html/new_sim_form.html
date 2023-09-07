@@ -1,0 +1,18 @@
+<html>
+<h1>{{.Title}}</h1>
+<p>{{.Text}}</p>
+<form action="/new_sim_form" method="POST">
+  <label for="rows">Rows:</label>
+  <input type="text" id="rows" name="rows">
+  <label for="cols">Cols:</label>
+  <input type="text" id="cols" name="cols">
+  <label for="foods">Foods:</label>
+  <input type="text" id="foods" name="foods">
+  <label for="creature1">Creature1:</label>
+  <input type="text" id="creature1" name="creature1">
+  <label for="creature2">Creature2:</label>
+  <input type="text" id="creature2" name="creature2">
+  <input type="submit" value="post">
+</form>
+
+</html>

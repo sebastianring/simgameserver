@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/sebastianring/simulationgame"
+	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -26,12 +27,38 @@ func runServer() {
 	router.HandleFunc("/api/new_sim", newSimulation).Methods("GET")
 	router.HandleFunc("/api/get_sim/{id: [0-9a-fA-F-]+}", getBoardFromDb).Methods("GET")
 	router.HandleFunc("/api/new_random_sim", newRandomSimulation).Methods("GET")
+	router.HandleFunc("/new_sim_form", newSimForm).Methods("GET", "POST")
 	// http.HandleFunc("/api/new_sim", newSimulation)
 	// http.HandleFunc("/api/sim", getBoardFromDb)
 
 	http.Handle("/", router)
 	fmt.Println("Server running at port 8080")
 	http.ListenAndServe(":8080", nil)
+}
+
+func newSimForm(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		t, err := template.ParseFiles("html/new_sim_form.html")
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		p := struct {
+			Title string
+			Text  string
+		}{
+			Title: "Simulation configuration",
+			Text:  "Please add your simulation configuration below",
+		}
+
+		t.Execute(w, p)
+	} else {
+		fmt.Println("YO - non GET method was passed")
+		fmt.Println(r.Form)
+		fmt.Println("foods: ", r.FormValue("foods"))
+		fmt.Println("all: ", r.PostForm)
+	}
 }
 
 func newRandomSimulation(w http.ResponseWriter, r *http.Request) {
