@@ -1,6 +1,6 @@
 module github.com/sebastianring/simgameserver
 
-go 1.20
+go 1.21
 
 require github.com/sebastianring/simulationgame v0.1.50
 

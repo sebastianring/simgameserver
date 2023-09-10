@@ -53,7 +53,7 @@ func newSimForm(w http.ResponseWriter, r *http.Request) {
 		}
 
 		t.Execute(w, p)
-	} else {
+	} else if r.Method == "POST" {
 		fmt.Println("YO - non GET method was passed")
 		fmt.Println(r.Form)
 		fmt.Println("foods: ", r.FormValue("foods"))
