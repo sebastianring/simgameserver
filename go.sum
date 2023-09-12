@@ -16,3 +16,7 @@ github.com/sebastianring/simulationgame v0.1.48 h1:DESMvAyy9Ps0tYuyYb/Qstvx6Sm8c
 github.com/sebastianring/simulationgame v0.1.48/go.mod h1:cI4vMt19xsWDxGcoDByYxZEeH2GDKlVIqFCt2TVHZRk=
 github.com/sebastianring/simulationgame v0.1.50 h1:RuAL/456Ksx2jx+cRlZPm6pJdpUM/ByadoZiUcHmJIc=
 github.com/sebastianring/simulationgame v0.1.50/go.mod h1:cI4vMt19xsWDxGcoDByYxZEeH2GDKlVIqFCt2TVHZRk=
+github.com/sebastianring/simulationgame v0.1.51 h1:3JiKD4XCNqnA0UIw3FwTHpXkKPkCcbQk/mhmCroR0ww=
+github.com/sebastianring/simulationgame v0.1.51/go.mod h1:cI4vMt19xsWDxGcoDByYxZEeH2GDKlVIqFCt2TVHZRk=
+github.com/sebastianring/simulationgame v0.1.52-0.20230912131009-511f18afba5a h1:ir/n3dTjRBcHIphBxyvtgtDARAQXO3FJe9E1lbt6fy8=
+github.com/sebastianring/simulationgame v0.1.52-0.20230912131009-511f18afba5a/go.mod h1:cI4vMt19xsWDxGcoDByYxZEeH2GDKlVIqFCt2TVHZRk=

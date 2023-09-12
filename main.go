@@ -75,7 +75,9 @@ func newRandomSimulation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	jsonBytes, err := json.MarshalIndent(resultBoard, "", " ")
+	// jsonBytes, err := json.MarshalIndent(resultBoard.Rounds, "", " ")
+
+	jsonBytes, err := getRoundData(resultBoard, AliveAtEnd)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

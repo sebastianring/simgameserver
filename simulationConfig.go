@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/sebastianring/simulationgame"
+	sg "github.com/sebastianring/simulationgame"
 )
 
 var parameterRules map[string]*Rule
@@ -105,113 +105,27 @@ func initRules() {
 
 }
 
-func getSimulationConfigFromUrl(r *http.Request) (*simulationgame.SimulationConfig, error) {
-	sc := simulationgame.SimulationConfig{}
-	finalValue := make(map[string]any)
-	vars := r.URL.Query()
-	// valueMap := map[string]any{
-	// 	"rows":      vars["rows"][0],
-	// 	"cols":      vars["cols"][0],
-	// 	"draw":      vars["draw"][0],
-	// 	"foods":     vars["foods"][0],
-	// 	"creature1": vars["creature1"][0],
-	// 	"creature2": vars["creature2"][0],
-	// }
+func getSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, error) {
+	finalValue, err := cleanUrlParametersToMap(r.URL.Query())
 
-	fmt.Println(vars)
-	for k, v := range vars {
-		fmt.Println(k, v[0])
+	if err != nil {
+		fmt.Println("Issue cleaning parameters from url values")
+
+		return nil, err
 	}
 
-	for key, rule := range parameterRules {
-		parameter := r.URL.Query().Get(key)
+	sc, err := getValidatedConfigFromMap(finalValue)
 
-		fmt.Println("Parameter fetched: " + key + " " + parameter + " and its length: " + strconv.Itoa(len(parameter)))
+	if err != nil {
+		fmt.Println("Issue validating configuration from map")
 
-		if len(parameter) == 0 {
-			finalValue[parameter] = rule.StandardValue
-		} else {
-			_, ok := rule.StandardValue.(bool)
-
-			if ok {
-				if parameter == "true" {
-					finalValue[parameter] = true
-
-				} else if parameter == "false" {
-					finalValue[parameter] = false
-
-				} else {
-					return nil, errors.New(rule.ErrorMsg)
-
-				}
-			} else {
-				_, ifInt := rule.StandardValue.(int)
-				_, ifUint := rule.StandardValue.(uint)
-
-				if ifInt || ifUint {
-					value, err := strconv.Atoi(parameter)
-
-					if err != nil {
-						return nil, errors.New("For value: " + key + " the value was not an int.")
-					}
-					//
-					// if value < rule.MinVal || value > rule.MaxVal {
-					// 	return nil, errors.New(rule.ErrorMsg)
-					// }
-
-					if ifUint {
-						finalValue[parameter] = uint(value)
-
-					} else {
-
-						finalValue[parameter] = value
-					}
-
-				}
-			}
-		}
-
-		cols, ok := finalValue["cols"].(int)
-
-		if ok {
-			sc.Cols = cols
-		}
-
-		rows, ok := finalValue["rows"].(int)
-
-		if ok {
-			sc.Rows = rows
-		}
-
-		draw, ok := finalValue["draw"].(bool)
-
-		if ok {
-			sc.Draw = draw
-		}
-
-		foods, ok := finalValue["foods"].(int)
-
-		if ok {
-			sc.Foods = foods
-		}
-
-		creature1, ok := finalValue["creature1"].(uint)
-
-		if ok {
-			sc.Creature1 = creature1
-		}
-
-		creature2, ok := finalValue["creature2"].(uint)
-
-		if ok {
-			sc.Creature2 = creature2
-		}
+		return nil, err
 	}
 
-	return &sc, nil
+	return sc, nil
 }
 
-func getRandomSimulationConfigFromUrl(r *http.Request) (*simulationgame.SimulationConfig, error) {
+func getRandomSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, error) {
 	parameters := mux.Vars(r)
 	fmt.Println(parameters)
 
@@ -219,8 +133,7 @@ func getRandomSimulationConfigFromUrl(r *http.Request) (*simulationgame.Simulati
 	sc, err := getRandomSimulationConfigFromInterval(intervalMap)
 
 	if err != nil {
-		//http error
-		//
+		return nil, err
 	}
 
 	return sc, nil
@@ -238,7 +151,7 @@ func getStandardIntervalMap() map[string]valueInterval {
 	return standardInterval
 }
 
-func getRandomSimulationConfigFromInterval(intervalMap map[string]valueInterval) (*simulationgame.SimulationConfig, error) {
+func getRandomSimulationConfigFromInterval(intervalMap map[string]valueInterval) (*sg.SimulationConfig, error) {
 	valueMap := make(map[string]any)
 
 	for key, rule := range parameterRules {
@@ -419,8 +332,8 @@ func cleanUrlParametersToMap(input url.Values) (map[string]any, error) {
 	return returnMap, nil
 }
 
-func getValidatedConfigFromMap(valueMap map[string]any) (*simulationgame.SimulationConfig, error) {
-	sc := simulationgame.SimulationConfig{}
+func getValidatedConfigFromMap(valueMap map[string]any) (*sg.SimulationConfig, error) {
+	sc := sg.SimulationConfig{}
 	finalValue := make(map[string]any)
 
 	for key, rule := range parameterRules {
