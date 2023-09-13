@@ -27,11 +27,13 @@ type valueInterval interface {
 	getMax() int
 }
 
+// Potential generics?
 type intInterval struct {
 	min int
 	max int
 }
 
+// Potential generics?
 type uintInterval struct {
 	min uint
 	max uint
@@ -235,8 +237,6 @@ func (r *Rule) validateValue(value any) (any, bool) {
 		return nil, false
 	}
 
-	// fmt.Println(reflect.TypeOf(r.StandardValue), reflect.TypeOf(value))
-
 	if reflect.TypeOf(value) == reflect.TypeOf(r.StandardValue) {
 		switch v := value.(type) {
 		case bool:
@@ -295,13 +295,6 @@ func cleanUrlParametersToMap(input url.Values) (map[string]any, error) {
 			}
 
 		case "rows", "cols", "foods":
-			// v, ok := value[0].(string)
-			//
-			// if !ok {
-			// 	fmt.Println("Type assertion failed - not a string")
-			// 	return nil, errors.New("Type assertion failed - not a string")
-			// }
-			//
 			intV, err := strconv.Atoi(value[0])
 
 			if err != nil {
@@ -311,13 +304,6 @@ func cleanUrlParametersToMap(input url.Values) (map[string]any, error) {
 
 			returnMap[key] = intV
 		case "creature1", "creature2":
-			// v, ok := input[key].(string)
-			//
-			// if !ok {
-			// 	fmt.Println("Type assertion failed - not a string")
-			// 	return nil, errors.New("Type assertion failed - not a string")
-			// }
-
 			intV, err := strconv.Atoi(value[0])
 
 			if err != nil {

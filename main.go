@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/sebastianring/simulationgame"
+	sg "github.com/sebastianring/simulationgame"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -69,13 +69,11 @@ func newRandomSimulation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("Starting simulation with config: ", sc)
-	resultBoard, err := simulationgame.RunSimulation(sc)
+	resultBoard, err := sg.RunSimulation(sc)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	// jsonBytes, err := json.MarshalIndent(resultBoard.Rounds, "", " ")
 
 	jsonBytes, err := getRoundData(resultBoard, AliveAtEnd)
 
@@ -102,7 +100,7 @@ func newSimulation(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Starting simulation with config: ")
 	fmt.Println("sc.creature1: " + strconv.Itoa(int(sc.Creature1)))
 
-	resultBoard, err := simulationgame.RunSimulation(sc)
+	resultBoard, err := sg.RunSimulation(sc)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
