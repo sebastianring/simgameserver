@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"errors"
 	"fmt"
 	sg "github.com/sebastianring/simulationgame"
@@ -20,7 +20,7 @@ type simpleRoundData struct {
 	CreatureSummary map[sg.BoardObjectType]*sg.CreatureSummary
 }
 
-func getRoundData(b *sg.Board, datatype RoundDataType) ([]byte, error) {
+func getRoundData(b *sg.Board, datatype RoundDataType) ([]*simpleRoundData, error) {
 	fmt.Println("Starting to get round data for a specific board.")
 	compiledRounds := []*simpleRoundData{}
 
@@ -57,11 +57,13 @@ func getRoundData(b *sg.Board, datatype RoundDataType) ([]byte, error) {
 		return nil, errors.New("Datatype can't be found")
 	}
 
-	jsonBytes, err := json.Marshal(compiledRounds)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return jsonBytes, nil
+	return compiledRounds, nil
+	//
+	// jsonBytes, err := json.MarshalIndent(compiledRounds, "", " ")
+	//
+	// if err != nil {
+	// 	return nil, err
+	// }
+	//
+	// return jsonBytes, nil
 }

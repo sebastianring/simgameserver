@@ -107,8 +107,8 @@ func initRules() {
 
 }
 
-func getSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, error) {
-	finalValue, err := cleanUrlParametersToMap(r.URL.Query())
+func getSimulationConfigFromUrlValues(urlvalues url.Values) (*sg.SimulationConfig, error) {
+	finalValue, err := cleanUrlParametersToMap(urlvalues)
 
 	if err != nil {
 		fmt.Println("Issue cleaning parameters from url values")
@@ -128,9 +128,20 @@ func getSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, error) {
 }
 
 func getRandomSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, error) {
+	// Does not consider any parameters yet! Please add
 	parameters := mux.Vars(r)
 	fmt.Println(parameters)
 
+	sc, err := getRandomSimulationConfig()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return sc, nil
+}
+
+func getRandomSimulationConfig() (*sg.SimulationConfig, error) {
 	intervalMap := getStandardIntervalMap()
 	sc, err := getRandomSimulationConfigFromInterval(intervalMap)
 

@@ -26,10 +26,10 @@ func runServer() {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/new_sim", newSimulation).Methods("GET")
 	router.HandleFunc("/api/get_sim/{id: [0-9a-fA-F-]+}", getBoardFromDb).Methods("GET")
+	router.HandleFunc("/api/del_sim/{id: [0-9a-fA-F-]+}", delBoardFromDb).Methods("DELETE")
 	router.HandleFunc("/api/new_random_sim", newRandomSimulation).Methods("GET")
 	router.HandleFunc("/new_sim_form", newSimForm).Methods("GET", "POST")
-	// http.HandleFunc("/api/new_sim", newSimulation)
-	// http.HandleFunc("/api/sim", getBoardFromDb)
+	router.HandleFunc("/api/new_multiple_sim", newMultipleRandomSimulations).Methods("GET")
 
 	http.Handle("/", router)
 	fmt.Println("Server running at port 8080")
@@ -42,6 +42,7 @@ func newSimForm(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		p := struct {
@@ -58,6 +59,37 @@ func newSimForm(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.Form)
 		fmt.Println("foods: ", r.FormValue("foods"))
 		fmt.Println("all: ", r.PostForm)
+
+		sc, err := getSimulationConfigFromUrlValues(r.PostForm)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		resultBoard, err := sg.RunSimulation(sc)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		roundData, err := getRoundData(resultBoard, AliveAtEnd)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		jsonBytes, err := json.MarshalIndent(roundData, "", " ")
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-type", "application/json")
+		w.Write(jsonBytes)
 	}
 }
 
@@ -75,11 +107,18 @@ func newRandomSimulation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	jsonBytes, err := getRoundData(resultBoard, AliveAtEnd)
+	roundData, err := getRoundData(resultBoard, AliveAtEnd)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		panic(err.Error())
+	}
+
+	jsonBytes, err := json.MarshalIndent(roundData, "", " ")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	// fmt.Println("Respond with json data: \n" + string(jsonBytes))
@@ -90,7 +129,7 @@ func newRandomSimulation(w http.ResponseWriter, r *http.Request) {
 }
 
 func newSimulation(w http.ResponseWriter, r *http.Request) {
-	sc, err := getSimulationConfigFromUrl(r)
+	sc, err := getSimulationConfigFromUrlValues(r.URL.Query())
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -119,6 +158,7 @@ func newSimulation(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 }
 
+// Maybe use go init() function instead?
 func initServer() {
 	initRules()
 	fmt.Println("Server initialized.")
@@ -175,4 +215,79 @@ func getBoardFromDb(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 	fmt.Println("Responded with json file: " + string(jsonResponse))
+}
+
+// Need to be worked on
+func delBoardFromDb(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+
+	id := parameters["id"]
+
+	fmt.Println(id)
+}
+
+func newMultipleRandomSimulations(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	var iterations uint
+
+	if len(vars["iterations"]) == 0 {
+		iterations = 10
+	} else {
+		temp, err := strconv.Atoi(vars["iterations"])
+
+		if err != nil {
+			http.Error(w, "Error converting parameter iterations to uint", http.StatusInternalServerError)
+			return
+		}
+
+		if temp < 1 || temp > 100 {
+			http.Error(w, "Either too few or too many iterations, interval should be between 1-100.", http.StatusInternalServerError)
+			return
+		}
+
+		iterations = uint(temp)
+	}
+
+	i := uint(0)
+	boardMap := [][]*simpleRoundData{}
+
+	for i < iterations {
+
+		sc, err := getRandomSimulationConfig()
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		resultBoard, err := sg.RunSimulation(sc)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		roundData, err := getRoundData(resultBoard, AliveAtEnd)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		boardMap = append(boardMap, roundData)
+		i++
+	}
+
+	jsonBytes, err := json.MarshalIndent(boardMap, "", " ")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
+
+	fmt.Println("Finished running simulations")
 }
