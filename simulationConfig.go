@@ -3,14 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
+	sg "github.com/sebastianring/simulationgame"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
-
-	"github.com/gorilla/mux"
-	sg "github.com/sebastianring/simulationgame"
 )
 
 var parameterRules map[string]*Rule

@@ -7,8 +7,11 @@ import (
 	"github.com/gorilla/mux"
 	sg "github.com/sebastianring/simulationgame"
 	"html/template"
+	"math/rand"
 	"net/http"
 	"strconv"
+	"sync"
+	"time"
 )
 
 type DBboard struct {
@@ -161,6 +164,7 @@ func newSimulation(w http.ResponseWriter, r *http.Request) {
 // Maybe use go init() function instead?
 func initServer() {
 	initRules()
+	rand.Seed(time.Now().UnixNano())
 	fmt.Println("Server initialized.")
 }
 
@@ -226,6 +230,52 @@ func delBoardFromDb(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(id)
 }
 
+func newMultipleRandomSimulationsConcurrent(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	var iterations uint
+
+	if len(vars["iterations"]) == 0 {
+		iterations = 10
+	} else {
+		temp, err := strconv.Atoi(vars["iterations"])
+
+		if err != nil {
+			http.Error(w, "Error converting parameter iterations to uint", http.StatusInternalServerError)
+			return
+		}
+
+		if temp < 1 || temp > 100 {
+			http.Error(w, "Either too few or too many iterations, interval should be between 1-100.", http.StatusInternalServerError)
+			return
+		}
+
+		iterations = uint(temp)
+	}
+
+	boardMap := [][]*simpleRoundData{}
+	wg := sync.WaitGroup{}
+
+	for i := uint(0); i < iterations; i++ {
+		wg.Add(1)
+		go runRandomSimAsGoRoutine(&w, &boardMap, &wg, i)
+	}
+
+	wg.Wait()
+
+	jsonBytes, err := json.MarshalIndent(boardMap, "", " ")
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonBytes)
+
+	fmt.Println("Finished running simulations")
+}
+
 func newMultipleRandomSimulations(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -249,11 +299,9 @@ func newMultipleRandomSimulations(w http.ResponseWriter, r *http.Request) {
 		iterations = uint(temp)
 	}
 
-	i := uint(0)
 	boardMap := [][]*simpleRoundData{}
 
-	for i < iterations {
-
+	for i := uint(0); i < iterations; i++ {
 		sc, err := getRandomSimulationConfig()
 
 		if err != nil {
@@ -290,4 +338,31 @@ func newMultipleRandomSimulations(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 
 	fmt.Println("Finished running simulations")
+}
+
+func runRandomSimAsGoRoutine(w *http.ResponseWriter, target *[][]*simpleRoundData, wg *sync.WaitGroup, id uint) {
+	defer wg.Done()
+	fmt.Printf("Routine nr: %d running.\n", id)
+	sc, err := getRandomSimulationConfig()
+
+	if err != nil {
+		http.Error(*w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resultBoard, err := sg.RunSimulation(sc)
+
+	if err != nil {
+		http.Error(*w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	roundData, err := getRoundData(resultBoard, AliveAtEnd)
+
+	if err != nil {
+		http.Error(*w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	*target = append(*target, roundData)
 }
