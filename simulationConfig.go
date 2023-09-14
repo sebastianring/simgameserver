@@ -170,6 +170,7 @@ func getRandomSimulationConfigFromInterval(intervalMap map[string]valueInterval)
 		if key == "draw" {
 			continue
 		}
+
 		if _, ok := rule.StandardValue.(uint); ok {
 			valueMap[key] = uint(randomValueInInterval(intervalMap[key]))
 		} else {

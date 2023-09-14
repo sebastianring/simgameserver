@@ -58,12 +58,4 @@ func getRoundData(b *sg.Board, datatype RoundDataType) ([]*simpleRoundData, erro
 	}
 
 	return compiledRounds, nil
-	//
-	// jsonBytes, err := json.MarshalIndent(compiledRounds, "", " ")
-	//
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// return jsonBytes, nil
 }

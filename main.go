@@ -32,6 +32,7 @@ func runServer() {
 	router.HandleFunc("/api/del_sim/{id: [0-9a-fA-F-]+}", delBoardFromDb).Methods("DELETE")
 	router.HandleFunc("/api/new_random_sim", newRandomSimulation).Methods("GET")
 	router.HandleFunc("/new_sim_form", newSimForm).Methods("GET", "POST")
+	router.HandleFunc("/api/new_multiple_sim_conc", newMultipleRandomSimulationsConcurrent).Methods("GET")
 	router.HandleFunc("/api/new_multiple_sim", newMultipleRandomSimulations).Methods("GET")
 
 	http.Handle("/", router)
@@ -58,11 +59,6 @@ func newSimForm(w http.ResponseWriter, r *http.Request) {
 
 		t.Execute(w, p)
 	} else if r.Method == "POST" {
-		fmt.Println("YO - non GET method was passed")
-		fmt.Println(r.Form)
-		fmt.Println("foods: ", r.FormValue("foods"))
-		fmt.Println("all: ", r.PostForm)
-
 		sc, err := getSimulationConfigFromUrlValues(r.PostForm)
 
 		if err != nil {
@@ -304,6 +300,8 @@ func newMultipleRandomSimulations(w http.ResponseWriter, r *http.Request) {
 	for i := uint(0); i < iterations; i++ {
 		sc, err := getRandomSimulationConfig()
 
+		fmt.Println("Starting random simulation with this config: ", sc)
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -344,6 +342,8 @@ func runRandomSimAsGoRoutine(w *http.ResponseWriter, target *[][]*simpleRoundDat
 	defer wg.Done()
 	fmt.Printf("Routine nr: %d running.\n", id)
 	sc, err := getRandomSimulationConfig()
+
+	fmt.Println("Starting random simulation with this config: ", sc)
 
 	if err != nil {
 		http.Error(*w, err.Error(), http.StatusInternalServerError)
