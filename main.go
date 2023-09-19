@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	sg "github.com/sebastianring/simulationgame"
 	"html/template"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -22,7 +23,9 @@ type DBboard struct {
 
 func main() {
 	initServer()
-	runServer()
+
+	service := NewAPIServer(":8080")
+	service.Run()
 }
 
 func runServer() {
@@ -151,8 +154,6 @@ func newSimulation(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 
-	// fmt.Println("Respond with json data: \n" + string(jsonBytes))
-
 	w.Header().Set("Content-type", "application/json")
 	w.Write(jsonBytes)
 }
@@ -161,7 +162,7 @@ func newSimulation(w http.ResponseWriter, r *http.Request) {
 func initServer() {
 	initRules()
 	rand.Seed(time.Now().UnixNano())
-	fmt.Println("Server initialized.")
+	log.Println("Server initialized.")
 }
 
 func getBoardFromDb(w http.ResponseWriter, r *http.Request) {

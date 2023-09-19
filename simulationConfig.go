@@ -350,36 +350,48 @@ func getValidatedConfigFromMap(valueMap map[string]any) (*sg.SimulationConfig, e
 
 	if ok {
 		sc.Cols = cols
+	} else {
+		return nil, errors.New("Error, the value of cols was not an int.")
 	}
 
 	rows, ok := finalValue["rows"].(int)
 
 	if ok {
 		sc.Rows = rows
+	} else {
+		return nil, errors.New("Error, the value of rows was not an int.")
 	}
 
 	draw, ok := finalValue["draw"].(bool)
 
 	if ok {
 		sc.Draw = draw
+	} else {
+		return nil, errors.New("Error, the value of draw was not a bool.")
 	}
 
 	foods, ok := finalValue["foods"].(int)
 
 	if ok {
 		sc.Foods = foods
+	} else {
+		return nil, errors.New("Error, the value of foods was not an int.")
 	}
 
 	creature1, ok := finalValue["creature1"].(uint)
 
 	if ok {
 		sc.Creature1 = creature1
+	} else {
+		return nil, errors.New("Error, the value of creature1 was not an uint.")
 	}
 
 	creature2, ok := finalValue["creature2"].(uint)
 
 	if ok {
 		sc.Creature2 = creature2
+	} else {
+		return nil, errors.New("Error, the value of creature2 was not an uint.")
 	}
 
 	return &sc, nil
