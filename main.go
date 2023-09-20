@@ -11,7 +11,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
-	"sync"
+	// "sync"
 	"time"
 )
 
@@ -30,12 +30,12 @@ func main() {
 
 func runServer() {
 	router := mux.NewRouter()
-	router.HandleFunc("/api/new_sim", newSimulation).Methods("GET")
+	// router.HandleFunc("/api/new_sim", newSimulation).Methods("GET")
 	router.HandleFunc("/api/get_sim/{id: [0-9a-fA-F-]+}", getBoardFromDb).Methods("GET")
 	router.HandleFunc("/api/del_sim/{id: [0-9a-fA-F-]+}", delBoardFromDb).Methods("DELETE")
-	router.HandleFunc("/api/new_random_sim", newRandomSimulation).Methods("GET")
+	// router.HandleFunc("/api/new_random_sim", newRandomSimulation).Methods("GET")
 	router.HandleFunc("/new_sim_form", newSimForm).Methods("GET", "POST")
-	router.HandleFunc("/api/new_multiple_sim_conc", newMultipleRandomSimulationsConcurrent).Methods("GET")
+	// router.HandleFunc("/api/new_multiple_sim_conc", newMultipleRandomSimulationsConcurrent).Methods("GET")
 	router.HandleFunc("/api/new_multiple_sim", newMultipleRandomSimulations).Methods("GET")
 
 	http.Handle("/", router)
@@ -95,40 +95,40 @@ func newSimForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func newRandomSimulation(w http.ResponseWriter, r *http.Request) {
-	sc, err := getRandomSimulationConfigFromUrl(r)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	fmt.Println("Starting simulation with config: ", sc)
-	resultBoard, err := sg.RunSimulation(sc)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	roundData, err := getRoundData(resultBoard, AliveAtEnd)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		panic(err.Error())
-	}
-
-	jsonBytes, err := json.MarshalIndent(roundData, "", " ")
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// fmt.Println("Respond with json data: \n" + string(jsonBytes))
-
-	w.Header().Set("Content-type", "application/json")
-	w.Write(jsonBytes)
-
-}
+// func newRandomSimulation(w http.ResponseWriter, r *http.Request) {
+// 	sc, err := getRandomSimulationConfigFromUrl(r)
+//
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 	}
+//
+// 	fmt.Println("Starting simulation with config: ", sc)
+// 	resultBoard, err := sg.RunSimulation(sc)
+//
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 	}
+//
+// 	roundData, err := getRoundData(resultBoard, AliveAtEnd)
+//
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		panic(err.Error())
+// 	}
+//
+// 	jsonBytes, err := json.MarshalIndent(roundData, "", " ")
+//
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+//
+// 	// fmt.Println("Respond with json data: \n" + string(jsonBytes))
+//
+// 	w.Header().Set("Content-type", "application/json")
+// 	w.Write(jsonBytes)
+//
+// }
 
 func newSimulation(w http.ResponseWriter, r *http.Request) {
 	sc, err := getSimulationConfigFromUrlValues(r.URL.Query())
@@ -227,51 +227,51 @@ func delBoardFromDb(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(id)
 }
 
-func newMultipleRandomSimulationsConcurrent(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	var iterations uint
-
-	if len(vars["iterations"]) == 0 {
-		iterations = 10
-	} else {
-		temp, err := strconv.Atoi(vars["iterations"])
-
-		if err != nil {
-			http.Error(w, "Error converting parameter iterations to uint", http.StatusInternalServerError)
-			return
-		}
-
-		if temp < 1 || temp > 100 {
-			http.Error(w, "Either too few or too many iterations, interval should be between 1-100.", http.StatusInternalServerError)
-			return
-		}
-
-		iterations = uint(temp)
-	}
-
-	boardMap := [][]*simpleRoundData{}
-	wg := sync.WaitGroup{}
-
-	for i := uint(0); i < iterations; i++ {
-		wg.Add(1)
-		go runRandomSimAsGoRoutine(&w, &boardMap, &wg, i)
-	}
-
-	wg.Wait()
-
-	jsonBytes, err := json.MarshalIndent(boardMap, "", " ")
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonBytes)
-
-	fmt.Println("Finished running simulations")
-}
+// func newMultipleRandomSimulationsConcurrent(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+//
+// 	var iterations uint
+//
+// 	if len(vars["iterations"]) == 0 {
+// 		iterations = 10
+// 	} else {
+// 		temp, err := strconv.Atoi(vars["iterations"])
+//
+// 		if err != nil {
+// 			http.Error(w, "Error converting parameter iterations to uint", http.StatusInternalServerError)
+// 			return
+// 		}
+//
+// 		if temp < 1 || temp > 100 {
+// 			http.Error(w, "Either too few or too many iterations, interval should be between 1-100.", http.StatusInternalServerError)
+// 			return
+// 		}
+//
+// 		iterations = uint(temp)
+// 	}
+//
+// 	boardMap := [][]*simpleRoundData{}
+// 	wg := sync.WaitGroup{}
+//
+// 	for i := uint(0); i < iterations; i++ {
+// 		wg.Add(1)
+// 		go runRandomSimAsGoRoutine(&w, &boardMap, &wg, i)
+// 	}
+//
+// 	wg.Wait()
+//
+// 	jsonBytes, err := json.MarshalIndent(boardMap, "", " ")
+//
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 	}
+//
+// 	w.Header().Set("Content-type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write(jsonBytes)
+//
+// 	fmt.Println("Finished running simulations")
+// }
 
 func newMultipleRandomSimulations(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -337,33 +337,4 @@ func newMultipleRandomSimulations(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 
 	fmt.Println("Finished running simulations")
-}
-
-func runRandomSimAsGoRoutine(w *http.ResponseWriter, target *[][]*simpleRoundData, wg *sync.WaitGroup, id uint) {
-	defer wg.Done()
-	fmt.Printf("Routine nr: %d running.\n", id)
-	sc, err := getRandomSimulationConfig()
-
-	fmt.Println("Starting random simulation with this config: ", sc)
-
-	if err != nil {
-		http.Error(*w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	resultBoard, err := sg.RunSimulation(sc)
-
-	if err != nil {
-		http.Error(*w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	roundData, err := getRoundData(resultBoard, AliveAtEnd)
-
-	if err != nil {
-		http.Error(*w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	*target = append(*target, roundData)
 }

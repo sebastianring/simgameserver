@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	// "net/http/httptest"
-
 	// sg "github.com/sebastianring/simulationgame"
 	"testing"
 )

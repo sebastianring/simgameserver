@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-
+	// "strconv"
+	// "sync"
 	"github.com/gorilla/mux"
-	sg "github.com/sebastianring/simulationgame"
+	// sg "github.com/sebastianring/simulationgame"
 )
 
 type APIServer struct {
@@ -44,6 +44,8 @@ func NewAPIServer(listenAddr string) *APIServer {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/single_sim", makeHTTPHandleFunc(s.HandleSingleSimulation))
+	router.HandleFunc("/api/new_multiple_sim_conc", makeHTTPHandleFunc(s.HandleMultipleRandomSimulationsConcurrent))
+	router.HandleFunc("/api/new_random_sim", makeHTTPHandleFunc(s.newRandomSimulation))
 
 	log.Println("API server started running on port: ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)
@@ -51,35 +53,24 @@ func (s *APIServer) Run() {
 
 func (s *APIServer) HandleSingleSimulation(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "GET" {
-		return s.getNewSingleSimulation(w, r)
+		return s.newSingleSimulation(w, r)
 	}
 
 	return fmt.Errorf("Method not allowed, %s", r.Method)
 }
 
-func (s *APIServer) getNewSingleSimulation(w http.ResponseWriter, r *http.Request) error {
-	sc, err := getSimulationConfigFromUrlValues(r.URL.Query())
-
-	if err != nil {
-		fmt.Println("Error occured during getting simulation config from URL values: ", err)
-		return err
+func (s *APIServer) HandleMultipleRandomSimulationsConcurrent(w http.ResponseWriter, r *http.Request) error {
+	if r.Method == "GET" {
+		return s.newMultipleRandomSimulationsConcurrent(w, r)
 	}
 
-	fmt.Println("Starting simulation with config: ")
-	fmt.Println("sc.creature1: " + strconv.Itoa(int(sc.Creature1)))
+	return fmt.Errorf("Method not allowed, %s", r.Method)
+}
 
-	resultBoard, err := sg.RunSimulation(sc)
-
-	if err != nil {
-		fmt.Println("Error occured during running the simulation: ", err)
-		return err
+func (s *APIServer) HandleSingleRandomSimulation(w http.ResponseWriter, r *http.Request) error {
+	if r.Method == "GET" {
+		return s.newRandomSimulation(w, r)
 	}
 
-	roundData, err := getRoundData(resultBoard, AliveAtEnd)
-
-	if err != nil {
-		return err
-	}
-
-	return WriteJSON(w, http.StatusOK, roundData)
+	return fmt.Errorf("Method not allowed, %s", r.Method)
 }
