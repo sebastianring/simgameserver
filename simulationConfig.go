@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	sg "github.com/sebastianring/simulationgame"
+	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -110,16 +111,14 @@ func getSimulationConfigFromUrlValues(urlvalues url.Values) (*sg.SimulationConfi
 	finalValue, err := cleanUrlParametersToMap(urlvalues)
 
 	if err != nil {
-		fmt.Println("Issue cleaning parameters from url values")
-
+		log.Println("Issue cleaning parameters from url values: " + err.Error())
 		return nil, err
 	}
 
 	sc, err := getValidatedConfigFromMap(finalValue)
 
 	if err != nil {
-		fmt.Println("Issue validating configuration from map")
-
+		log.Println("Issue validating configuration from map: " + err.Error())
 		return nil, err
 	}
 
@@ -127,7 +126,10 @@ func getSimulationConfigFromUrlValues(urlvalues url.Values) (*sg.SimulationConfi
 }
 
 func getRandomSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, error) {
-	// Does not consider any parameters yet! Please add
+	// Does not consider any parameters yet! Please add -
+	// Different from specific values as in other singe simulations
+	// Consumer need to be able to add intervals which are relevant, e.g. rows: 100-120
+
 	parameters := mux.Vars(r)
 	fmt.Println(parameters)
 
@@ -243,54 +245,54 @@ func (r *Rule) validateGenericValue(value any) (any, bool) {
 	return nil, false
 }
 
-func (r *Rule) validateValue(value any) (any, bool) {
+func (r *Rule) validateValue(value any) (any, error) {
 	if value == nil {
-		return nil, false
+		return r.StandardValue, errors.New("No value added, resorting to standard value")
 	}
 
 	if reflect.TypeOf(value) == reflect.TypeOf(r.StandardValue) {
 		switch v := value.(type) {
 		case bool:
-			return value, true
+			return value, nil
 		case int:
 			min, ok := r.MinVal.(int)
 
 			if !ok {
-				return nil, false
+				return nil, errors.New(r.ErrorMsg)
 			}
 
 			max, ok := r.MaxVal.(int)
 
 			if !ok {
-				return nil, false
+				return nil, errors.New(r.ErrorMsg)
 			}
 
 			if v >= min && v <= max {
-				return value, true
+				return value, nil
 			}
 		case uint:
 			min, ok := r.MinVal.(uint)
 
 			if !ok {
-				return nil, false
+				return nil, errors.New(r.ErrorMsg)
 			}
 
 			max, ok := r.MaxVal.(uint)
 
 			if !ok {
-				return nil, false
+				return nil, errors.New(r.ErrorMsg)
 			}
 
 			if v >= min && v <= max {
-				return value, true
+				return value, nil
 			}
 
 		default:
-			return nil, false
+			return nil, errors.New(r.ErrorMsg)
 		}
 	}
 
-	return nil, false
+	return nil, errors.New(r.ErrorMsg)
 }
 
 func cleanUrlParametersToMap(input url.Values) (map[string]any, error) {
@@ -334,13 +336,20 @@ func getValidatedConfigFromMap(valueMap map[string]any) (*sg.SimulationConfig, e
 	finalValue := make(map[string]any)
 
 	for key, rule := range parameterRules {
-		v, ok := rule.validateValue(valueMap[key])
+		v, err := rule.validateValue(valueMap[key])
 
-		if !ok {
+		if err != nil {
+			if v == nil {
+				return nil, errors.New(err.Error())
+			} else {
+				log.Printf("No value for parameter: %v, resorting to standard value.", key)
+				finalValue[key] = v
+			}
 			// Currently, if there is an issue with a validation,
 			// standard value is set instead.
 			// Maybe should return an error instead.
-			finalValue[key] = rule.StandardValue
+			// finalValue[key] = rule.StandardValue
+			// return nil, errors.New("Issue validating rule: " + key)
 		} else {
 			finalValue[key] = v
 		}

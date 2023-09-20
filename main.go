@@ -24,8 +24,10 @@ type DBboard struct {
 func main() {
 	initServer()
 
-	service := NewAPIServer(":8080")
-	service.Run()
+	// go runServer()
+
+	server := NewAPIServer(":8080")
+	server.Run()
 }
 
 func runServer() {
@@ -34,13 +36,13 @@ func runServer() {
 	router.HandleFunc("/api/get_sim/{id: [0-9a-fA-F-]+}", getBoardFromDb).Methods("GET")
 	router.HandleFunc("/api/del_sim/{id: [0-9a-fA-F-]+}", delBoardFromDb).Methods("DELETE")
 	// router.HandleFunc("/api/new_random_sim", newRandomSimulation).Methods("GET")
-	router.HandleFunc("/new_sim_form", newSimForm).Methods("GET", "POST")
+	// router.HandleFunc("/new_sim_form", newSimForm).Methods("GET", "POST")
 	// router.HandleFunc("/api/new_multiple_sim_conc", newMultipleRandomSimulationsConcurrent).Methods("GET")
 	router.HandleFunc("/api/new_multiple_sim", newMultipleRandomSimulations).Methods("GET")
 
 	http.Handle("/", router)
-	fmt.Println("Server running at port 8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Server running at port 8081")
+	http.ListenAndServe(":8081", nil)
 }
 
 func newSimForm(w http.ResponseWriter, r *http.Request) {
@@ -61,6 +63,7 @@ func newSimForm(w http.ResponseWriter, r *http.Request) {
 		}
 
 		t.Execute(w, p)
+
 	} else if r.Method == "POST" {
 		sc, err := getSimulationConfigFromUrlValues(r.PostForm)
 
