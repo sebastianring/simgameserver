@@ -11,7 +11,6 @@ func TestNewSingleSimulationFromApi(t *testing.T) {
 	fmt.Println("Testing a GET method to api url /api/new_sim which generates a new simulation and returns a Json file with the results per round.")
 
 	initServer()
-
 	service := NewAPIServer(":8080")
 	service.Run()
 

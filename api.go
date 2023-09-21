@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type APIServer struct {
@@ -26,8 +30,29 @@ type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
 func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := f(w, r); err != nil {
-			WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+		ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)
+		defer cancel()
+
+		funcDone := make(chan bool)
+		err := errors.New("")
+
+		go func() {
+			err = f(w, r)
+			//    if err := f(w, r); err != nil {
+			// 	WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+			// }
+
+			funcDone <- true
+		}()
+
+		select {
+		case <-ctx.Done():
+			WriteJSON(w, http.StatusGatewayTimeout, ApiError{Error: "Operation timed out."})
+
+		case <-funcDone:
+			if err != nil {
+				WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+			}
 		}
 	}
 }
@@ -41,10 +66,10 @@ func NewAPIServer(listenAddr string) *APIServer {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/new_single_sim", makeHTTPHandleFunc(s.HandleSingleSimulation))
-	router.HandleFunc("/api/new_multiple_sim_conc", makeHTTPHandleFunc(s.HandleMultipleRandomSimulationsConcurrent))
+	router.HandleFunc("/api/new_multiple_sim/{iterations:[1-9][0-9]*}", makeHTTPHandleFunc(s.HandleMultipleRandomSimulationsConcurrent))
 	router.HandleFunc("/api/new_random_sim", makeHTTPHandleFunc(s.HandleSingleRandomSimulation))
 	router.HandleFunc("/new_sim_form", makeHTTPHandleFunc(s.HandleSimForm))
-	router.HandleFunc("/api/sim/{id: [0-9a-fA-F-]+}", makeHTTPHandleFunc(s.HandleSims))
+	router.HandleFunc("/api/sim/{id:[0-9a-fA-F-]+}", makeHTTPHandleFunc(s.HandleSims))
 
 	log.Println("API server started running on port", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)

@@ -158,7 +158,7 @@ func getStandardIntervalMap() map[string]valueInterval {
 
 	standardInterval["rows"] = &intInterval{min: 50, max: 150}
 	standardInterval["cols"] = &intInterval{min: 50, max: 150}
-	standardInterval["foods"] = &intInterval{min: 50, max: 200}
+	standardInterval["foods"] = &intInterval{min: 50, max: 150}
 	standardInterval["creature1"] = &uintInterval{min: 5, max: 25}
 	standardInterval["creature2"] = &uintInterval{min: 5, max: 25}
 
@@ -183,7 +183,7 @@ func getRandomSimulationConfigFromInterval(intervalMap map[string]valueInterval)
 	sc, err := getValidatedConfigFromMap(valueMap)
 
 	if err != nil {
-		return nil, errors.New("Validation of configuration failed.")
+		return nil, errors.New("Validation of configuration failed." + err.Error())
 	}
 
 	return sc, nil

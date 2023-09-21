@@ -54,12 +54,12 @@ func (s *APIServer) runRandomSimAsGoRoutine(target *[][]*simpleRoundData, wg *sy
 	fmt.Printf("Routine nr: %d running.\n", id)
 	sc, err := getRandomSimulationConfig()
 
-	fmt.Println("Starting random simulation with this config: ", sc)
-
 	if err != nil {
 		log.Println(err)
 		return err
 	}
+
+	fmt.Println("Starting random simulation with this config: ", sc)
 
 	resultBoard, err := sg.RunSimulation(sc)
 
