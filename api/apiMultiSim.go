@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"errors"
@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
+	sc "github.com/sebastianring/simgameserver/simconfig"
 	sg "github.com/sebastianring/simulationgame"
 )
 
@@ -52,7 +53,7 @@ func (s *APIServer) newMultipleRandomSimulationsConcurrent(w http.ResponseWriter
 func (s *APIServer) runRandomSimAsGoRoutine(target *[][]*simpleRoundData, wg *sync.WaitGroup, id uint) error {
 	defer wg.Done()
 	fmt.Printf("Routine nr: %d running.\n", id)
-	sc, err := getRandomSimulationConfig()
+	sc, err := sc.GetRandomSimulationConfig()
 
 	if err != nil {
 		log.Println(err)

@@ -1,20 +1,19 @@
-package main
+package simconfig
 
 import (
 	"fmt"
 	"net/url"
 	"reflect"
-
 	// sg "github.com/sebastianring/simulationgame"
 	"testing"
 )
 
-func TestGettingRandomConfig(t *testing.T) {
+func TestGetRandomSimulationConfig(t *testing.T) {
 	fmt.Println("Testing to get a random simulation config.")
 	initRules()
 
-	intervalMap := getStandardIntervalMap()
-	sc, err := getRandomSimulationConfigFromInterval(intervalMap)
+	intervalMap := GetStandardIntervalMap()
+	sc, err := GetRandomSimulationConfigFromInterval(intervalMap)
 
 	if err != nil {
 		t.Error("Error creating a new sc: ", err.Error())
@@ -23,7 +22,7 @@ func TestGettingRandomConfig(t *testing.T) {
 	fmt.Println(sc)
 }
 
-func TestGettingMultipleRandomConfig(t *testing.T) {
+func TestGetMultipleRandomSimulationConfig(t *testing.T) {
 	fmt.Println("Testing to get a random simulation config.")
 	initRules()
 
@@ -31,8 +30,8 @@ func TestGettingMultipleRandomConfig(t *testing.T) {
 	counter := 0
 
 	for i := 0; i < iterations; i++ {
-		intervalMap := getStandardIntervalMap()
-		_, err := getRandomSimulationConfigFromInterval(intervalMap)
+		intervalMap := GetStandardIntervalMap()
+		_, err := GetRandomSimulationConfigFromInterval(intervalMap)
 
 		if err != nil {
 			t.Error("Error creating a new sc: ", err.Error())
@@ -41,7 +40,7 @@ func TestGettingMultipleRandomConfig(t *testing.T) {
 		}
 	}
 
-	if counter != iterations-1 {
+	if counter != iterations {
 		t.Error("Config failed this many times: ", iterations-1-counter)
 	}
 }
@@ -58,13 +57,13 @@ func TestParsingUrl(t *testing.T) {
 
 	fmt.Println(reflect.TypeOf(q))
 
-	resultMap, err := cleanUrlParametersToMap(q)
+	resultMap, err := CleanUrlParametersToMap(q)
 
 	if err != nil {
 		t.Error("Issue cleaning url")
 	}
 
-	finalMap, err := getValidatedConfigFromMap(resultMap)
+	finalMap, err := GetValidatedConfigFromMap(resultMap)
 
 	if err != nil {
 		t.Error("Issue validating config.")

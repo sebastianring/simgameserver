@@ -1,4 +1,4 @@
-package main
+package simconfig
 
 import (
 	"errors"
@@ -55,7 +55,7 @@ func (ui *uintInterval) getMax() int {
 	return int(ui.max)
 }
 
-func initRules() {
+func InitRules() {
 	rowsRule := Rule{
 		StandardValue: int(40),
 		MinVal:        int(5),
@@ -107,15 +107,15 @@ func initRules() {
 
 }
 
-func getSimulationConfigFromUrlValues(urlvalues url.Values) (*sg.SimulationConfig, error) {
-	finalValue, err := cleanUrlParametersToMap(urlvalues)
+func GetSimulationConfigFromUrlValues(urlvalues url.Values) (*sg.SimulationConfig, error) {
+	finalValue, err := CleanUrlParametersToMap(urlvalues)
 
 	if err != nil {
 		log.Println("Issue cleaning parameters from url values: " + err.Error())
 		return nil, err
 	}
 
-	sc, err := getValidatedConfigFromMap(finalValue)
+	sc, err := GetValidatedConfigFromMap(finalValue)
 
 	if err != nil {
 		log.Println("Issue validating configuration from map: " + err.Error())
@@ -125,7 +125,7 @@ func getSimulationConfigFromUrlValues(urlvalues url.Values) (*sg.SimulationConfi
 	return sc, nil
 }
 
-func getRandomSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, error) {
+func GetRandomSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, error) {
 	// Does not consider any parameters yet! Please add -
 	// Different from specific values as in other singe simulations
 	// Consumer need to be able to add intervals which are relevant, e.g. rows: 100-120
@@ -133,7 +133,7 @@ func getRandomSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, er
 	parameters := mux.Vars(r)
 	fmt.Println(parameters)
 
-	sc, err := getRandomSimulationConfig()
+	sc, err := GetRandomSimulationConfig()
 
 	if err != nil {
 		return nil, err
@@ -142,9 +142,9 @@ func getRandomSimulationConfigFromUrl(r *http.Request) (*sg.SimulationConfig, er
 	return sc, nil
 }
 
-func getRandomSimulationConfig() (*sg.SimulationConfig, error) {
-	intervalMap := getStandardIntervalMap()
-	sc, err := getRandomSimulationConfigFromInterval(intervalMap)
+func GetRandomSimulationConfig() (*sg.SimulationConfig, error) {
+	intervalMap := GetStandardIntervalMap()
+	sc, err := GetRandomSimulationConfigFromInterval(intervalMap)
 
 	if err != nil {
 		return nil, err
@@ -153,7 +153,7 @@ func getRandomSimulationConfig() (*sg.SimulationConfig, error) {
 	return sc, nil
 }
 
-func getStandardIntervalMap() map[string]valueInterval {
+func GetStandardIntervalMap() map[string]valueInterval {
 	standardInterval := make(map[string]valueInterval)
 
 	standardInterval["rows"] = &intInterval{min: 50, max: 150}
@@ -165,7 +165,7 @@ func getStandardIntervalMap() map[string]valueInterval {
 	return standardInterval
 }
 
-func getRandomSimulationConfigFromInterval(intervalMap map[string]valueInterval) (*sg.SimulationConfig, error) {
+func GetRandomSimulationConfigFromInterval(intervalMap map[string]valueInterval) (*sg.SimulationConfig, error) {
 	valueMap := make(map[string]any)
 
 	for key, rule := range parameterRules {
@@ -180,7 +180,7 @@ func getRandomSimulationConfigFromInterval(intervalMap map[string]valueInterval)
 		}
 	}
 
-	sc, err := getValidatedConfigFromMap(valueMap)
+	sc, err := GetValidatedConfigFromMap(valueMap)
 
 	if err != nil {
 		return nil, errors.New("Validation of configuration failed." + err.Error())
@@ -295,7 +295,7 @@ func (r *Rule) validateValue(value any) (any, error) {
 	return nil, errors.New(r.ErrorMsg)
 }
 
-func cleanUrlParametersToMap(input url.Values) (map[string]any, error) {
+func CleanUrlParametersToMap(input url.Values) (map[string]any, error) {
 	returnMap := make(map[string]any)
 
 	for key, value := range input {
@@ -331,7 +331,7 @@ func cleanUrlParametersToMap(input url.Values) (map[string]any, error) {
 	return returnMap, nil
 }
 
-func getValidatedConfigFromMap(valueMap map[string]any) (*sg.SimulationConfig, error) {
+func GetValidatedConfigFromMap(valueMap map[string]any) (*sg.SimulationConfig, error) {
 	sc := sg.SimulationConfig{}
 	finalValue := make(map[string]any)
 

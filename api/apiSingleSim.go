@@ -1,18 +1,19 @@
-package main
+package api
 
 import (
 	"errors"
 	"github.com/gorilla/mux"
+	ldb "github.com/sebastianring/simgameserver/db"
+	sc "github.com/sebastianring/simgameserver/simconfig"
+	sg "github.com/sebastianring/simulationgame"
 	"html/template"
 	"log"
 	"net/http"
 	"strconv"
-
-	sg "github.com/sebastianring/simulationgame"
 )
 
 func (s *APIServer) newSingleSimulation(w http.ResponseWriter, r *http.Request) error {
-	sc, err := getSimulationConfigFromUrlValues(r.URL.Query())
+	sc, err := sc.GetSimulationConfigFromUrlValues(r.URL.Query())
 
 	if err != nil {
 		log.Println("Error occured during getting simulation config from URL values: ", err)
@@ -39,7 +40,7 @@ func (s *APIServer) newSingleSimulation(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *APIServer) newRandomSimulation(w http.ResponseWriter, r *http.Request) error {
-	sc, err := getRandomSimulationConfigFromUrl(r)
+	sc, err := sc.GetRandomSimulationConfigFromUrl(r)
 
 	if err != nil {
 	}
@@ -90,7 +91,7 @@ func (s *APIServer) getBoardFromDb(w http.ResponseWriter, r *http.Request) error
 		log.Println("Looking for this board in the db: " + id)
 	}
 
-	db, err := openDbConnection()
+	db, err := ldb.OpenDbConnection()
 
 	if err != nil {
 		return errors.New("Error connecting to DB: " + err.Error())
@@ -105,10 +106,10 @@ func (s *APIServer) getBoardFromDb(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	var results []DBboard
+	var results []ldb.DBboard
 
 	for rows.Next() {
-		dbboard := DBboard{}
+		dbboard := ldb.DBboard{}
 
 		if err := rows.Scan(&dbboard.Id, &dbboard.Rows, &dbboard.Cols); err != nil {
 			return errors.New("Database scan error: " + err.Error())

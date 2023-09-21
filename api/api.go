@@ -1,67 +1,16 @@
-package main
+package api
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
+	sc "github.com/sebastianring/simgameserver/simconfig"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/gorilla/mux"
 )
-
-type APIServer struct {
-	listenAddr string
-}
-
-func WriteJSON(w http.ResponseWriter, status int, v any) error {
-	w.WriteHeader(status)
-	w.Header().Set("Content-type", "application/json")
-	return json.NewEncoder(w).Encode(v)
-}
-
-type ApiError struct {
-	Error string
-}
-
-type apiFunc func(w http.ResponseWriter, r *http.Request) error
-
-func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)
-		defer cancel()
-
-		funcDone := make(chan bool)
-		err := errors.New("")
-
-		go func() {
-			err = f(w, r)
-			//    if err := f(w, r); err != nil {
-			// 	WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
-			// }
-
-			funcDone <- true
-		}()
-
-		select {
-		case <-ctx.Done():
-			WriteJSON(w, http.StatusGatewayTimeout, ApiError{Error: "Operation timed out."})
-
-		case <-funcDone:
-			if err != nil {
-				WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
-			}
-		}
-	}
-}
-
-func NewAPIServer(listenAddr string) *APIServer {
-	return &APIServer{
-		listenAddr: listenAddr,
-	}
-}
 
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
@@ -119,4 +68,56 @@ func (s *APIServer) HandleSims(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return fmt.Errorf("Method not allowed, %s", r.Method)
+}
+
+type APIServer struct {
+	listenAddr string
+}
+
+func WriteJSON(w http.ResponseWriter, status int, v any) error {
+	w.WriteHeader(status)
+	w.Header().Set("Content-type", "application/json")
+	return json.NewEncoder(w).Encode(v)
+}
+
+type ApiError struct {
+	Error string
+}
+
+type apiFunc func(w http.ResponseWriter, r *http.Request) error
+
+func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)
+		defer cancel()
+
+		funcDone := make(chan bool)
+		err := errors.New("")
+
+		go func() {
+			err = f(w, r)
+			//    if err := f(w, r); err != nil {
+			// 	WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+			// }
+
+			funcDone <- true
+		}()
+
+		select {
+		case <-ctx.Done():
+			WriteJSON(w, http.StatusGatewayTimeout, ApiError{Error: "Operation timed out."})
+
+		case <-funcDone:
+			if err != nil {
+				WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+			}
+		}
+	}
+}
+
+func NewAPIServer(listenAddr string) *APIServer {
+	sc.InitRules()
+	return &APIServer{
+		listenAddr: listenAddr,
+	}
 }

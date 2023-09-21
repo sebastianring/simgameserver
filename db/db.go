@@ -1,15 +1,23 @@
-package main
+package db
 
 import (
 	"database/sql"
 	// _ "database/sql/driver"
 	"fmt"
-	_ "github.com/lib/pq"
 	"os"
+
+	"github.com/google/uuid"
+	_ "github.com/lib/pq"
 	// _ "github.com/lib/pq"
 )
 
-func openDbConnection() (*sql.DB, error) {
+type DBboard struct {
+	Id   uuid.UUID `json:"id"`
+	Rows int       `json:"rows"`
+	Cols int       `json:"cols"`
+}
+
+func OpenDbConnection() (*sql.DB, error) {
 	prefix := "postgres://"
 	user := "sim_game"
 	password := os.Getenv("SIM_GAME_DB_PW")
