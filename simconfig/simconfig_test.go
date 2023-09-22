@@ -1,19 +1,21 @@
-package simconfig
+package simconfig_test
 
 import (
 	"fmt"
+	"testing"
+
+	sc "github.com/sebastianring/simgameserver/simconfig"
+
 	"net/url"
 	"reflect"
-	// sg "github.com/sebastianring/simulationgame"
-	"testing"
 )
 
 func TestGetRandomSimulationConfig(t *testing.T) {
 	fmt.Println("Testing to get a random simulation config.")
-	initRules()
+	sc.InitRules()
 
-	intervalMap := GetStandardIntervalMap()
-	sc, err := GetRandomSimulationConfigFromInterval(intervalMap)
+	intervalMap := sc.GetStandardIntervalMap()
+	sc, err := sc.GetRandomSimulationConfigFromInterval(intervalMap)
 
 	if err != nil {
 		t.Error("Error creating a new sc: ", err.Error())
@@ -24,14 +26,14 @@ func TestGetRandomSimulationConfig(t *testing.T) {
 
 func TestGetMultipleRandomSimulationConfig(t *testing.T) {
 	fmt.Println("Testing to get a random simulation config.")
-	initRules()
+	sc.InitRules()
 
 	iterations := 25
 	counter := 0
 
 	for i := 0; i < iterations; i++ {
-		intervalMap := GetStandardIntervalMap()
-		_, err := GetRandomSimulationConfigFromInterval(intervalMap)
+		intervalMap := sc.GetStandardIntervalMap()
+		_, err := sc.GetRandomSimulationConfigFromInterval(intervalMap)
 
 		if err != nil {
 			t.Error("Error creating a new sc: ", err.Error())
@@ -57,13 +59,13 @@ func TestParsingUrl(t *testing.T) {
 
 	fmt.Println(reflect.TypeOf(q))
 
-	resultMap, err := CleanUrlParametersToMap(q)
+	resultMap, err := sc.CleanUrlParametersToMap(q)
 
 	if err != nil {
 		t.Error("Issue cleaning url")
 	}
 
-	finalMap, err := GetValidatedConfigFromMap(resultMap)
+	finalMap, err := sc.GetValidatedConfigFromMap(resultMap)
 
 	if err != nil {
 		t.Error("Issue validating config.")

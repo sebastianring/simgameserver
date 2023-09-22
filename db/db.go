@@ -22,8 +22,6 @@ func OpenDbConnection() (*sql.DB, error) {
 	user := "sim_game"
 	password := os.Getenv("SIM_GAME_DB_PW")
 	adress := "5.150.233.156"
-	// adress := "192.168.0.130"
-	// adress := "localhost"
 	port := "5432"
 
 	database_url := prefix + user + ":" +
@@ -40,16 +38,16 @@ func OpenDbConnection() (*sql.DB, error) {
 		fmt.Println("Database connection secured!")
 	}
 
-	// err = db.Ping()
-	//
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	//
-	// 	return nil, err
-	//
-	// } else {
-	// 	fmt.Println("Database pinged!")
-	// }
+	err = db.Ping()
+
+	if err != nil {
+		fmt.Println(err.Error())
+
+		return nil, err
+
+	} else {
+		fmt.Println("Database pinged!")
+	}
 
 	return db, nil
 }

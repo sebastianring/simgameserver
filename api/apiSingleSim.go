@@ -95,6 +95,8 @@ func (s *APIServer) getBoardFromDb(w http.ResponseWriter, r *http.Request) error
 
 	if err != nil {
 		return errors.New("Error connecting to DB: " + err.Error())
+	} else {
+		log.Println("Database received OK")
 	}
 
 	defer db.Close()
@@ -111,7 +113,9 @@ func (s *APIServer) getBoardFromDb(w http.ResponseWriter, r *http.Request) error
 	for rows.Next() {
 		dbboard := ldb.DBboard{}
 
-		if err := rows.Scan(&dbboard.Id, &dbboard.Rows, &dbboard.Cols); err != nil {
+		err := rows.Scan(&dbboard.Id, &dbboard.Rows, &dbboard.Cols)
+
+		if err != nil {
 			return errors.New("Database scan error: " + err.Error())
 		}
 

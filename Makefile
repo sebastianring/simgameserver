@@ -5,4 +5,4 @@ run: build
 	./bin/simgameserver
 
 test:
-	go test -v ./..
+	go test -v ./...

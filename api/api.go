@@ -59,7 +59,6 @@ func (s *APIServer) HandleSimForm(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (s *APIServer) HandleSims(w http.ResponseWriter, r *http.Request) error {
-	log.Println("testing..")
 	if r.Method == "GET" {
 		return s.getBoardFromDb(w, r)
 	} else if r.Method == "DELETE" {
@@ -88,29 +87,29 @@ type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
 func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(context.Background(), 3000*time.Millisecond)
+		ctx, cancel := context.WithTimeout(context.Background(), 10000*time.Millisecond)
 		defer cancel()
 
-		funcDone := make(chan bool)
+		done := make(chan bool)
 		err := errors.New("")
 
 		go func() {
 			err = f(w, r)
-			//    if err := f(w, r); err != nil {
-			// 	WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
-			// }
+			close(done)
 
-			funcDone <- true
+			if err != nil {
+				WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+			}
 		}()
 
 		select {
 		case <-ctx.Done():
+			close(done)
+
 			WriteJSON(w, http.StatusGatewayTimeout, ApiError{Error: "Operation timed out."})
 
-		case <-funcDone:
-			if err != nil {
-				WriteJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
-			}
+		case <-done:
+
 		}
 	}
 }
