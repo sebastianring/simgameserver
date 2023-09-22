@@ -62,7 +62,6 @@ func (s *APIServer) HandleSims(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "GET" {
 		return s.getBoardFromDb(w, r)
 	} else if r.Method == "DELETE" {
-		// BELOW FUNCTION IS NOT WORKING YET
 		return s.delBoardFromDb(w, r)
 	}
 

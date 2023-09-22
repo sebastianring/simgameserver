@@ -95,8 +95,6 @@ func (s *APIServer) getBoardFromDb(w http.ResponseWriter, r *http.Request) error
 
 	if err != nil {
 		return errors.New("Error connecting to DB: " + err.Error())
-	} else {
-		log.Println("Database received OK")
 	}
 
 	defer db.Close()
@@ -125,13 +123,28 @@ func (s *APIServer) getBoardFromDb(w http.ResponseWriter, r *http.Request) error
 	return WriteJSON(w, http.StatusOK, results)
 }
 
-// NOT COMPLETED YET
 func (s *APIServer) delBoardFromDb(w http.ResponseWriter, r *http.Request) error {
 	parameters := mux.Vars(r)
 
 	id := parameters["id"]
 
-	log.Println(id)
+	if id == "" {
+		return errors.New("No id given, please check parameter id, currently given id: " + id)
+	} else {
+		log.Println("Looking for this board in the db: " + id)
+	}
 
-	return nil
+	db, err := ldb.OpenDbConnection()
+
+	if err != nil {
+		return errors.New("Error connecting to DB: " + err.Error())
+	}
+
+	defer db.Close()
+
+	query := "DELETE FROM simulation_game.boards WHERE id = $1"
+
+	_, err = db.Query(query, id)
+
+	return err
 }
