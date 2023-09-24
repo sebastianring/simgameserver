@@ -2,13 +2,11 @@ package db
 
 import (
 	"database/sql"
-	// _ "database/sql/driver"
 	"fmt"
 	"os"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
-	// _ "github.com/lib/pq"
 )
 
 type DBboard struct {

@@ -42,7 +42,10 @@ func (s *APIServer) newMultipleRandomSimulationsConcurrent(w http.ResponseWriter
 
 	for i := uint(0); i < iterations; i++ {
 		wg.Add(1)
-		go s.runRandomSimAsGoRoutine(&boardMap, &wg, i)
+		go func() {
+			s.runRandomSimulation(&boardMap)
+			wg.Done()
+		}()
 	}
 
 	wg.Wait()
@@ -50,9 +53,7 @@ func (s *APIServer) newMultipleRandomSimulationsConcurrent(w http.ResponseWriter
 	return WriteJSON(w, http.StatusOK, boardMap)
 }
 
-func (s *APIServer) runRandomSimAsGoRoutine(target *[][]*simpleRoundData, wg *sync.WaitGroup, id uint) error {
-	defer wg.Done()
-	fmt.Printf("Routine nr: %d running.\n", id)
+func (s *APIServer) runRandomSimulation(target *[][]*simpleRoundData) error {
 	sc, err := sc.GetRandomSimulationConfig()
 
 	if err != nil {
@@ -60,7 +61,7 @@ func (s *APIServer) runRandomSimAsGoRoutine(target *[][]*simpleRoundData, wg *sy
 		return err
 	}
 
-	fmt.Println("Starting random simulation with this config: ", sc)
+	log.Println("Starting random simulation with this config: ", sc)
 
 	resultBoard, err := sg.RunSimulation(sc)
 

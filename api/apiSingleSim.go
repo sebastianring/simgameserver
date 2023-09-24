@@ -111,7 +111,10 @@ func (s *APIServer) getBoardFromDb(w http.ResponseWriter, r *http.Request) error
 	for rows.Next() {
 		dbboard := ldb.DBboard{}
 
-		err := rows.Scan(&dbboard.Id, &dbboard.Rows, &dbboard.Cols)
+		err := rows.Scan(
+			&dbboard.Id,
+			&dbboard.Rows,
+			&dbboard.Cols)
 
 		if err != nil {
 			return errors.New("Database scan error: " + err.Error())
