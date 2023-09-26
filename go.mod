@@ -8,3 +8,5 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/sebastianring/simulationgame v0.1.52-0.20230914124458-5960ee34f835
 )
+
+require github.com/golang-jwt/jwt/v5 v5.0.0 // indirect

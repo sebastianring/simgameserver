@@ -5,16 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	sc "github.com/sebastianring/simgameserver/simconfig"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
-	router.HandleFunc("/api/new_single_sim", makeHTTPHandleFunc(s.HandleSingleSimulation))
+	router.HandleFunc("/api/new_single_sim", WithJWTAuth(makeHTTPHandleFunc(s.HandleSingleSimulation)))
 	router.HandleFunc("/api/new_multiple_sim/{iterations:[1-9][0-9]*}", makeHTTPHandleFunc(s.HandleMultipleRandomSimulationsConcurrent))
 	router.HandleFunc("/api/new_random_sim", makeHTTPHandleFunc(s.HandleSingleRandomSimulation))
 	router.HandleFunc("/new_sim_form", makeHTTPHandleFunc(s.HandleSimForm))
@@ -79,7 +81,7 @@ func WriteJSON(w http.ResponseWriter, status int, v any) error {
 }
 
 type ApiError struct {
-	Error string
+	Error string `json:"error"`
 }
 
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
@@ -110,6 +112,35 @@ func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 		case <-done:
 
 		}
+	}
+}
+
+func validateJWT(tokenString string) (*jwt.Token, error) {
+	secret := os.Getenv("JWT_SECRET")
+
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v ", token.Header["alg"])
+		}
+
+		return []byte(secret), nil
+	})
+}
+
+func WithJWTAuth(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Calling middleware JWT Auth.")
+
+		tokenString := r.Header.Get("x-jwt-token")
+
+		_, err := validateJWT(tokenString)
+
+		if err != nil {
+			WriteJSON(w, http.StatusForbidden, ApiError{Error: "Issue validating JWT: " + err.Error()})
+			return
+		}
+
+		handlerFunc(w, r)
 	}
 }
 
