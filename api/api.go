@@ -150,7 +150,3 @@ func NewAPIServer(listenAddr string) *APIServer {
 		listenAddr: listenAddr,
 	}
 }
-
-func test() {
-	d
-}
