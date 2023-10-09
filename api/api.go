@@ -16,7 +16,7 @@ import (
 
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
-	router.HandleFunc("/api/new_single_sim", WithJWTAuth(makeHTTPHandleFunc(s.HandleSingleSimulation)))
+	router.HandleFunc("/api/new_single_sim", makeHTTPHandleFunc(s.HandleSingleSimulation))
 	router.HandleFunc("/api/new_multiple_sim/{iterations:[1-9][0-9]*}", makeHTTPHandleFunc(s.HandleMultipleRandomSimulationsConcurrent))
 	router.HandleFunc("/api/new_random_sim", makeHTTPHandleFunc(s.HandleSingleRandomSimulation))
 	router.HandleFunc("/new_sim_form", makeHTTPHandleFunc(s.HandleSimForm))

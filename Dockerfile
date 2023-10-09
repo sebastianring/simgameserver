@@ -1,14 +1,25 @@
-from golang:1.21 as build
+FROM golang:1.21 AS build-stage
 
 WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
+COPY go.mod go.sum ./
+
 RUN go mod download
-COPY . .
-RUN go build -o app .
 
-FROM alpine:latest
-WORKDIR /app
-COPY --from=build /app .
-CMD ["./app"]
+COPY . ./
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /simgameserver
+RUN export SIM_GAME_DB_PW=valmet865
+RUN mkdir logs/
+
+FROM gcr.io/distroless/base-debian11 AS build-release-stage
+
+WORKDIR /
+
+COPY --from=build-stage /simgameserver /simgameserver
+
+EXPOSE 8080
+
+USER nonroot:nonroot
+
+ENTRYPOINT ["/simgameserver"]

@@ -8,3 +8,7 @@ github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/sebastianring/simulationgame v0.1.53 h1:ELCZUdctkjPipkGpuBUSfA8ynQEDsmvctBww51FsWdo=
 github.com/sebastianring/simulationgame v0.1.53/go.mod h1:cI4vMt19xsWDxGcoDByYxZEeH2GDKlVIqFCt2TVHZRk=
+github.com/sebastianring/simulationgame v0.1.54-0.20231008182803-1bc8f15ac5aa h1:aIdHoHgaesPhscpLdUOHoaZd+Zdr5WXT9/9nSw6LJdk=
+github.com/sebastianring/simulationgame v0.1.54-0.20231008182803-1bc8f15ac5aa/go.mod h1:cI4vMt19xsWDxGcoDByYxZEeH2GDKlVIqFCt2TVHZRk=
+github.com/sebastianring/simulationgame v0.1.54-0.20231008200525-405109dfc92a h1:Gv+hKFIoYOBwblu4lNkVyVJE6Ia104FSVX2ULEcfuq8=
+github.com/sebastianring/simulationgame v0.1.54-0.20231008200525-405109dfc92a/go.mod h1:cI4vMt19xsWDxGcoDByYxZEeH2GDKlVIqFCt2TVHZRk=
