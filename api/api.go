@@ -23,7 +23,11 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/api/sim/{id:[0-9a-fA-F-]+}", makeHTTPHandleFunc(s.HandleSims))
 
 	log.Println("API server started running on port", s.listenAddr)
-	http.ListenAndServe(s.listenAddr, router)
+	err := http.ListenAndServe(s.listenAddr, router)
+
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (s *APIServer) HandleSingleSimulation(w http.ResponseWriter, r *http.Request) error {

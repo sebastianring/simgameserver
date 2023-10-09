@@ -96,6 +96,20 @@ func InitRules() {
 		ErrorMsg:      "Invalid value for creature2, should be between 0-50",
 	}
 
+	maxRoundsRule := Rule{
+		StandardValue: int(50),
+		MinVal:        int(1),
+		MaxVal:        int(100),
+		ErrorMsg:      "Invalid value for max rounds, should be between 1-100",
+	}
+
+	gamelogSizeRule := Rule{
+		StandardValue: int(40),
+		MinVal:        int(20),
+		MaxVal:        int(75),
+		ErrorMsg:      "Invalid value for gamelog size, should be between 20-75",
+	}
+
 	parameterRules = make(map[string]*Rule, 1)
 
 	parameterRules["rows"] = &rowsRule
@@ -104,6 +118,8 @@ func InitRules() {
 	parameterRules["foods"] = &foodsRule
 	parameterRules["creature1"] = &creature1Rule
 	parameterRules["creature2"] = &creature2Rule
+	parameterRules["maxrounds"] = &maxRoundsRule
+	parameterRules["gamelogsize"] = &gamelogSizeRule
 
 }
 
@@ -169,7 +185,7 @@ func GetRandomSimulationConfigFromInterval(intervalMap map[string]valueInterval)
 	valueMap := make(map[string]any)
 
 	for key, rule := range parameterRules {
-		if key == "draw" {
+		if key == "draw" || key == "maxrounds" || key == "gamelogsize" {
 			continue
 		}
 
@@ -401,6 +417,22 @@ func GetValidatedConfigFromMap(valueMap map[string]any) (*sg.SimulationConfig, e
 		sc.Creature2 = creature2
 	} else {
 		return nil, errors.New("Error, the value of creature2 was not an uint.")
+	}
+
+	maxRounds, ok := finalValue["maxrounds"].(int)
+
+	if ok {
+		sc.MaxRounds = maxRounds
+	} else {
+		return nil, errors.New("Error, the value of maxround was not an int.")
+	}
+
+	gamelogSize, ok := finalValue["gamelogsize"].(int)
+
+	if ok {
+		sc.GamelogSize = gamelogSize
+	} else {
+		return nil, errors.New("Error, the value of gamelog size was not an int.")
 	}
 
 	return &sc, nil
