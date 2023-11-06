@@ -15,14 +15,15 @@ func TestAPIServer_GetHandleSingleSimulation(t *testing.T) {
 	fmt.Println("Testing a GET method to api url /api/new_sim which generates a new simulation and returns a Json file with the results per round.")
 
 	req := httptest.NewRequest("GET", "/api/new_single_sim", nil)
-
 	rr := httptest.NewRecorder()
 
 	s := api.NewAPIServer(":8080")
-
 	sc.InitRules()
+	err := s.HandleSingleSimulation(rr, req)
 
-	s.HandleSingleSimulation(rr, req)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 
 	fmt.Println(rr.Body.String())
 }

@@ -148,6 +148,7 @@ func WithJWTAuth(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// NewAPIServer function    Returns a *APIServer
 func NewAPIServer(listenAddr string) *APIServer {
 	sc.InitRules()
 	return &APIServer{
