@@ -31,7 +31,10 @@ func getRoundData(b *sg.Board, datatype RoundDataType) ([]*simpleRoundData, erro
 				ID:              val.Id,
 				CreatureSummary: val.CreaturesAliveAtEndSum,
 			}
-			compiledRounds = append(compiledRounds, &srd)
+
+			if len(srd.CreatureSummary) > 0 {
+				compiledRounds = append(compiledRounds, &srd)
+			}
 		}
 
 	case Killed:
@@ -40,7 +43,10 @@ func getRoundData(b *sg.Board, datatype RoundDataType) ([]*simpleRoundData, erro
 				ID:              val.Id,
 				CreatureSummary: val.CreaturesKilledSum,
 			}
-			compiledRounds = append(compiledRounds, &srd)
+
+			if len(srd.CreatureSummary) > 0 {
+				compiledRounds = append(compiledRounds, &srd)
+			}
 		}
 
 	case Spawned:
@@ -49,7 +55,9 @@ func getRoundData(b *sg.Board, datatype RoundDataType) ([]*simpleRoundData, erro
 				ID:              val.Id,
 				CreatureSummary: val.CreaturesSpawnedSum,
 			}
-			compiledRounds = append(compiledRounds, &srd)
+			if len(srd.CreatureSummary) > 0 {
+				compiledRounds = append(compiledRounds, &srd)
+			}
 		}
 
 	default:
